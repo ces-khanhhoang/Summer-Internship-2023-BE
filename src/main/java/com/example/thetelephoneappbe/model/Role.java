@@ -27,10 +27,6 @@ public class Role {
     @Column(name = "role_name")
     private ERole name;
     @ManyToMany(mappedBy = "roles", cascade = CascadeType.ALL)
-//    @JsonManagedReference
-
-
-//    @JsonIdentityInfo(generator= ObjectIdGenerators.IntSequenceGenerator.class, property="@id")
     private Set<User> users = new HashSet<>();
 
     public Long getId() {

@@ -18,7 +18,6 @@ import java.util.Set;
 
 @JsonIdentityInfo(generator=ObjectIdGenerators.PropertyGenerator.class, property="id")
 
-
 public class Room {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,8 +25,24 @@ public class Room {
     private Long id;
     @Column(name = "status")
     private String status;
+
+
+    public Room(){
+    }
+
+    public Room(String status){
+        this.status = status;
+    }
+
+    @OneToMany(mappedBy = "room")
+    private List<User> users = new ArrayList<>();
+
     @OneToMany(mappedBy = "room")
     Set<User> users = new HashSet<>();
+
+
+    @OneToMany(mappedBy = "room1")
+    private List<Result> results = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -45,6 +60,7 @@ public class Room {
         this.status = status;
     }
 
+
     public Set<User> getUsers() {
         return users;
     }
@@ -61,6 +77,7 @@ public class Room {
 
                 '}';
     }
+
 }
 
 
