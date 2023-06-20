@@ -8,7 +8,9 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import javax.persistence.*;
 
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -23,16 +25,18 @@ public class User {
     private String nickname;
     @Column(name = "image")
     private String image;
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "id_room", referencedColumnName = "id_room")
     Room room = new Room();
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinTable(name = "user_role",
             joinColumns = @JoinColumn(name = "id_user", referencedColumnName = "id_user"),
             inverseJoinColumns = @JoinColumn(name = "id_role", referencedColumnName = "id_role"))
-
     private Set<Role> roles = new HashSet<>();
+
+    @OneToMany(mappedBy = "user1")
+    private List<Result> results = new ArrayList<>();
 
 
     public Long getId() {

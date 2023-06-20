@@ -15,7 +15,6 @@ import java.util.List;
 
 
 @JsonIdentityInfo(generator=ObjectIdGenerators.PropertyGenerator.class, property="id")
-
 public class Room {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,11 +22,19 @@ public class Room {
     private Long id;
     @Column(name = "status")
     private String status;
-    @OneToMany(mappedBy = "room")
-//    @JsonManagedReference
-//    @JsonIdentityInfo(generator= ObjectIdGenerators.IntSequenceGenerator.class, property="@id")
 
+    public Room(){
+    }
+
+    public Room(String status){
+        this.status = status;
+    }
+
+    @OneToMany(mappedBy = "room")
     private List<User> users = new ArrayList<>();
+
+    @OneToMany(mappedBy = "room1")
+    private List<Result> results = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -45,13 +52,6 @@ public class Room {
         this.status = status;
     }
 
-    /*public List<User> getUsers() {
-        return users;
-    }
-
-    public void setUsers(List<User> users) {
-        this.users = users;
-    }*/
 }
 
 
