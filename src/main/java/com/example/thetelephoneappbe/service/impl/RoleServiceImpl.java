@@ -14,10 +14,11 @@ import java.util.List;
 
 @Service
 public class RoleServiceImpl implements RoleService {
-    RoleRepository roleRepository;
+
+    private RoleRepository roleRepository;
 
     @Autowired
-    public void setStoreRepository(RoleRepository roleRepository) {
+    public void setRoleRepository(RoleRepository roleRepository) {
         this.roleRepository = roleRepository;
     }
 
@@ -25,6 +26,7 @@ public class RoleServiceImpl implements RoleService {
     public List<Role> getAllRole() {
         return roleRepository.findAll();
     }
+
 
 }
 

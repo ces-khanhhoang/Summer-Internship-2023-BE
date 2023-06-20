@@ -3,7 +3,6 @@ package com.example.thetelephoneappbe.model;
 
 import com.example.thetelephoneappbe.enums.ERole;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import javax.persistence.*;
@@ -27,10 +26,6 @@ public class Role {
     @Column(name = "role_name")
     private ERole name;
     @ManyToMany(mappedBy = "roles", cascade = CascadeType.ALL)
-//    @JsonManagedReference
-
-
-//    @JsonIdentityInfo(generator= ObjectIdGenerators.IntSequenceGenerator.class, property="@id")
     private Set<User> users = new HashSet<>();
 
     public Long getId() {

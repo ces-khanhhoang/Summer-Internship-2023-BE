@@ -1,5 +1,10 @@
 package com.example.thetelephoneappbe.service;
 
-public interface RoomService {
+import com.example.thetelephoneappbe.model.Room;
 
+import java.util.List;
+
+public interface RoomService {
+    Room createRoom(Room room);
+    List<Room> getAllRoom();
 }

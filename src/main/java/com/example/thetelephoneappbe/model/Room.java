@@ -1,23 +1,15 @@
 package com.example.thetelephoneappbe.model;
 
-
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-
 import javax.persistence.*;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 
+import java.util.List;
 import java.util.Set;
 
 @Entity
 @Table(name = "room")
-
-
-
-@JsonIdentityInfo(generator=ObjectIdGenerators.PropertyGenerator.class, property="id")
-
 
 public class Room {
     @Id
@@ -28,6 +20,19 @@ public class Room {
     private String status;
     @OneToMany(mappedBy = "room")
     Set<User> users = new HashSet<>();
+
+    public Room(){
+    }
+
+    public Room(String status){
+        this.status = status;
+    }
+
+    @OneToMany(mappedBy = "room")
+    private List<User> users1 = new ArrayList<>();
+
+    @OneToMany(mappedBy = "room1")
+    private List<Result> results = new ArrayList<>();
 
     public Long getId() {
         return id;
