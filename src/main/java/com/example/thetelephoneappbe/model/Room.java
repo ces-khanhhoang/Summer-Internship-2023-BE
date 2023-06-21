@@ -7,6 +7,7 @@ import java.util.HashSet;
 
 import java.util.List;
 import java.util.Set;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "room")
@@ -49,7 +50,6 @@ public class Room {
     public void setStatus(String status) {
         this.status = status;
     }
-
     public Set<User> getUsers() {
         return users;
     }
@@ -60,10 +60,11 @@ public class Room {
 
     @Override
     public String toString() {
-        return "Room{" +
-                "id=" + id +
-                ", status='" + status + '\'' +
-
+        return "{" +
+                "id = " + id +
+                ", status = " + status +
+                ", users = " + users +
+                ", results = " + results +
                 '}';
     }
 }

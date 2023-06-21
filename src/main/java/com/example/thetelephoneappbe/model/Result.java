@@ -7,7 +7,6 @@ import javax.persistence.*;
 
 @Entity
 @Table(name = "result")
-@JsonIdentityInfo(generator= ObjectIdGenerators.IntSequenceGenerator.class, property="id")
 public class Result {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
