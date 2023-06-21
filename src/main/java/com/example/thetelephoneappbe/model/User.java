@@ -77,13 +77,14 @@ public class User {
 
     @Override
     public String toString() {
-        return "{" +
+        return  "{" +
                 "  id:" + id +
                 ", nickname:" + nickname +
                 ", image:" + image +
+                ", role:" + roles +
                 ", id_room:" + room.getId() +
                 ", status:" + room.getStatus() +
-                '}';
+                "}";
     }
 }
 
