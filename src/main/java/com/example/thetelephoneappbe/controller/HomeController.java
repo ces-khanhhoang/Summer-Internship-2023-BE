@@ -29,12 +29,9 @@ public class HomeController {
     @GetMapping("/getAll")
     public ResponseEntity<List<Role>> getAll(){
         System.out.println(roleService.getAllRole());
-
-
         return new ResponseEntity<>(roleService.getAllRole(), HttpStatus.OK);
 
     }
-
 
     @GetMapping("/start")
     public ResponseEntity<List<Role>> start() {

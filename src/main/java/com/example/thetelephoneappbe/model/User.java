@@ -1,10 +1,5 @@
 package com.example.thetelephoneappbe.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-
 import javax.persistence.*;
 
 
@@ -15,9 +10,6 @@ import java.util.Set;
 
 @Entity
 @Table(name = "user")
-
-@JsonIdentityInfo(generator=ObjectIdGenerators.IntSequenceGenerator.class, property="id")
-
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -81,14 +73,16 @@ public class User {
         this.room = room;
     }
 
+
+
     @Override
     public String toString() {
-        return "User{" +
-                "id=" + id +
-                ", nickname='" + nickname + '\'' +
-                ", image='" + image + '\'' +
-                ", room=" + room +
-
+        return "{" +
+                "  id:" + id +
+                ", nickname:" + nickname +
+                ", image:" + image +
+                ", id_room:" + room.getId() +
+                ", status:" + room.getStatus() +
                 '}';
     }
 }
