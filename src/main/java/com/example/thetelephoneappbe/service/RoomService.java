@@ -7,4 +7,7 @@ import java.util.List;
 public interface RoomService {
     Room createRoom(Room room);
     List<Room> getAllRoom();
+    Room getOneRoom(Long id);
+
+
 }

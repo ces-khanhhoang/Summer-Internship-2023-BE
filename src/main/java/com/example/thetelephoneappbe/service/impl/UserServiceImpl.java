@@ -1,5 +1,6 @@
 package com.example.thetelephoneappbe.service.impl;
 
+import com.example.thetelephoneappbe.model.Room;
 import com.example.thetelephoneappbe.model.User;
 import com.example.thetelephoneappbe.repository.UserRepository;
 import com.example.thetelephoneappbe.service.UserService;
@@ -18,5 +19,9 @@ public class UserServiceImpl implements UserService {
     @Override
     public User creatUser(User user) {
         return userRepository.save(user);
+    }
+    @Override
+    public User saveUser(User user){
+        return  userRepository.save(user);
     }
 }
