@@ -9,4 +9,5 @@ public interface UserService {
     void joinUser(Long idRoom, String userName, RoomService roomService, RoleService roleService);
     List<User> getUserByIdRoom(Long idRoom);
 
+
 }

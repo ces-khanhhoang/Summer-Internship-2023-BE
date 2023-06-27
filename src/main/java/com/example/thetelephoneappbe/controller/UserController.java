@@ -43,6 +43,17 @@ public class UserController {
         User user = userService.creatUser(userName, roomService, roleService);
         return ResponseEntity.ok(gson.toJson(gson.fromJson(user.toString(), Object.class)));
     }
+    @PostMapping("/join")
+    public ResponseEntity<String> joinRoom(@RequestParam("user_name") String userName, @RequestParam("id_room") Long roomId) {
+        User userJoin = new User();
+        Room roomJoin =  roomService.getOneRoom(roomId);
+        userJoin.setNickname(userName);
+        userJoin.setRoom(roomService.getOneRoom(roomId));
+        userService.saveUser(userJoin);
+        roomJoin.getUsers().add(userJoin);
+        return ResponseEntity.ok(gson.toJson(gson.fromJson(roomJoin.getUsers().toString(), Object.class)));
+    }
+
 
     @PostMapping("/join/{id_room}/{user_name}")
     public ResponseEntity<String> join(@PathVariable("id_room") Long idRoom, @PathVariable("user_name") String userName){
