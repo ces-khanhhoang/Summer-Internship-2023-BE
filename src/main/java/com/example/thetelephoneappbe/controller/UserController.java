@@ -1,7 +1,5 @@
 package com.example.thetelephoneappbe.controller;
 
-import com.example.thetelephoneappbe.model.Role;
-import com.example.thetelephoneappbe.model.Room;
 import com.example.thetelephoneappbe.model.User;
 import com.example.thetelephoneappbe.service.RoleService;
 import com.example.thetelephoneappbe.service.RoomService;
@@ -9,11 +7,10 @@ import com.example.thetelephoneappbe.service.UserService;
 import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-
-
-import static com.example.thetelephoneappbe.enums.ERole.ROLE_HOST;
+import java.util.List;
 
 @Controller
 @RequestMapping("/user")
@@ -22,6 +19,9 @@ public class UserController {
     private UserService userService;
     private RoomService roomService;
     private RoleService roleService;
+
+    @Autowired
+    private SimpMessagingTemplate simpMessagingTemplate;
     Gson gson = new Gson();
 
     @Autowired
@@ -40,13 +40,7 @@ public class UserController {
 
     @PostMapping("/create/{user_name}")
     public ResponseEntity<String> create(@PathVariable("user_name") String userName){
-        User user = new User();
-        user.setNickname(userName);
-        user.setRoom(roomService.createRoom(new Room("NEW")));
-        Role role = roleService.getAllRole().stream().filter(role1 -> role1.getName().equals(ROLE_HOST)).toList().get(0);
-        user.getRoles().add(role);
-        role.getUsers().add(user);
-        userService.creatUser(user);
+        User user = userService.creatUser(userName, roomService, roleService);
         return ResponseEntity.ok(gson.toJson(gson.fromJson(user.toString(), Object.class)));
     }
     @PostMapping("/join")
@@ -61,4 +55,12 @@ public class UserController {
     }
 
 
+    @PostMapping("/join/{id_room}/{user_name}")
+    public ResponseEntity<String> join(@PathVariable("id_room") Long idRoom, @PathVariable("user_name") String userName){
+        System.out.println("join room");
+        userService.joinUser(idRoom, userName, roomService, roleService);
+        List<User> users = userService.getUserByIdRoom(idRoom);
+        simpMessagingTemplate.convertAndSend("/topic/" + idRoom , gson.toJson(gson.fromJson(users.toString(), Object.class)));
+        return ResponseEntity.ok(gson.toJson(gson.fromJson(users.toString(), Object.class)));
+    }
 }
