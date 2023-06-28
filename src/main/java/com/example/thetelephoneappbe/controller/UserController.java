@@ -1,5 +1,6 @@
 package com.example.thetelephoneappbe.controller;
 
+import com.example.thetelephoneappbe.model.Room;
 import com.example.thetelephoneappbe.model.User;
 import com.example.thetelephoneappbe.service.RoleService;
 import com.example.thetelephoneappbe.service.RoomService;
@@ -11,6 +12,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/user")
@@ -43,24 +45,40 @@ public class UserController {
         User user = userService.creatUser(userName, roomService, roleService);
         return ResponseEntity.ok(gson.toJson(gson.fromJson(user.toString(), Object.class)));
     }
-    @PostMapping("/join")
-    public ResponseEntity<String> joinRoom(@RequestParam("user_name") String userName, @RequestParam("id_room") Long roomId) {
-        User userJoin = new User();
-        Room roomJoin =  roomService.getOneRoom(roomId);
-        userJoin.setNickname(userName);
-        userJoin.setRoom(roomService.getOneRoom(roomId));
-        userService.saveUser(userJoin);
-        roomJoin.getUsers().add(userJoin);
-        return ResponseEntity.ok(gson.toJson(gson.fromJson(roomJoin.getUsers().toString(), Object.class)));
-    }
+
 
 
     @PostMapping("/join/{id_room}/{user_name}")
     public ResponseEntity<String> join(@PathVariable("id_room") Long idRoom, @PathVariable("user_name") String userName){
         System.out.println("join room");
         userService.joinUser(idRoom, userName, roomService, roleService);
-        List<User> users = userService.getUserByIdRoom(idRoom);
+        List<User> users =  roomService.getOneRoom(idRoom).getUsers();
         simpMessagingTemplate.convertAndSend("/topic/" + idRoom , gson.toJson(gson.fromJson(users.toString(), Object.class)));
         return ResponseEntity.ok(gson.toJson(gson.fromJson(users.toString(), Object.class)));
     }
+
+    @PostMapping("/delete/{id_room}/{nickname}")
+    public ResponseEntity<String> deleteUserFromRoom(@PathVariable("id_room")Long roomId, @PathVariable("nickname")String name) {
+
+        Room playRoom = roomService.getOneRoom(roomId);
+        User userToDelete = playRoom
+                .getUsers().stream()
+                .filter(user -> user.getNickname()
+                .equals(name)).findFirst().orElseThrow();
+
+        playRoom.getUsers().remove(userToDelete);
+        roomService.SaveRoom(playRoom);
+        userToDelete.setRoom(null);
+        userService.saveUser(userToDelete);
+
+        simpMessagingTemplate.convertAndSend(
+                "/topic/" + roomId,
+                gson.toJson(gson.fromJson(playRoom.getUsers().toString(), Object.class)));
+        simpMessagingTemplate.convertAndSend(
+                "/topic/" + userToDelete.getNickname(),
+                gson.toJson(gson.fromJson(userToDelete.getNickname().toString() , Object.class)));
+
+        return ResponseEntity.ok( gson.toJson(gson.fromJson(playRoom.getUsers().toString(), Object.class)));
+    }
+
 }

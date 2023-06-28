@@ -18,7 +18,7 @@ public class RoomServiceImpl implements RoomService {
         this.roomRepository = roomRepository;
     }
     @Override
-    public Room createRoom(Room room) {
+    public Room SaveRoom(Room room) {
         return roomRepository.save(room);
     }
 

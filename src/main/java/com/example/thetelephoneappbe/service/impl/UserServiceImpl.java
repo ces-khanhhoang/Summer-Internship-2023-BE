@@ -30,7 +30,7 @@ public class UserServiceImpl implements UserService {
     public User creatUser(String userName, RoomService roomService, RoleService roleService) {
         User user = new User();
         user.setNickname(userName);
-        user.setRoom(roomService.createRoom(new Room("NEW")));
+        user.setRoom(roomService.SaveRoom(new Room("NEW")));
         Role role = roleService.getAllRole().stream().filter(role1 -> role1.getName().equals(ROLE_HOST)).toList().get(0);
         user.getRoles().add(role);
         role.getUsers().add(user);
@@ -51,6 +51,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<User> getUserByIdRoom(Long idRoom) {
+        System.out.println(userRepository.findAll());
         return userRepository.findAll()
                              .stream()
                              .filter(user -> user.getRoom().getId().equals(idRoom))
