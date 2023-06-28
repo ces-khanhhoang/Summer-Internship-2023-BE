@@ -5,7 +5,7 @@ import com.example.thetelephoneappbe.model.Room;
 import java.util.List;
 
 public interface RoomService {
-    Room createRoom(Room room);
+    Room SaveRoom(Room room);
     List<Room> getAllRoom();
     Room getOneRoom(Long id);
 

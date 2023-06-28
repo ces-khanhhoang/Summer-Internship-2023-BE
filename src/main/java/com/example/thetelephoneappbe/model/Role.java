@@ -63,13 +63,20 @@ public class Role {
         return Objects.hash(id, name);
     }
 
-    @Override
+   /* @Override
     public String toString() {
         return "{" +
                 "id:" + id +
                 ", name:" + name +
                 '}';
-    }
+    }*/
+   @Override
+   public String toString() {
+       return "{" +
+               "id:" + id +
+               ", name:" + name +
+               '}';
+   }
 }
 
 
