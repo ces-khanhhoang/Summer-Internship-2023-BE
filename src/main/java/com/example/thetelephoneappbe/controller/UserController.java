@@ -59,7 +59,6 @@ public class UserController {
 
     @PostMapping("/join/{id_room}/{user_name}")
     public ResponseEntity<String> join(@PathVariable("id_room") Long idRoom, @PathVariable("user_name") String userName) {
-        System.out.println("join room");
         userService.joinUser(idRoom, userName, roomService, roleService);
         List<User> users = roomService.getOneRoom(idRoom).getUsers();
         simpMessagingTemplate.convertAndSend("/topic/" + idRoom, gson.toJson(gson.fromJson(users.toString(), Object.class)));
@@ -91,6 +90,7 @@ public class UserController {
 
     @PostMapping("/start/{id_room}")
     public ResponseEntity<String> start(@PathVariable("id_room") Long idRoom) {
+
         Room room = roomService.getOneRoom(idRoom);
         room.setStatus("IN_PROGRESS");
         List<User> users = room.getUsers();
@@ -106,10 +106,11 @@ public class UserController {
     public ResponseEntity<String> Done(@PathVariable("id_room") Long idRoom, @PathVariable("name") String nickname, @PathVariable("data") String data, @PathVariable("turn") Integer turn) {
 
         Room playRoom = roomService.getOneRoom(idRoom);
+
+
         StorageGame storageGamePlay = storageGames.stream()
-                .filter(storageGame -> storageGame.getIdRoom().equals(playRoom.getId()))
-                .findFirst()
-                .orElseThrow();
+                .filter(storageGame -> storageGame.getIdRoom().equals(idRoom))
+                .reduce((first, second) -> second).orElseThrow();
 
         if (storageGamePlay.getResult().containsKey(nickname)) {
             Map<Integer, String> innerMap = storageGamePlay.getResult().get(nickname);
@@ -147,9 +148,12 @@ public class UserController {
         }
         return ResponseEntity.ok(gson.toJson(gson.fromJson(playRoom.getUsers().toString(), Object.class)));
     }
+
     @PostMapping("/result/{nickname}/{id_room}")
     public ResponseEntity<String> result(@PathVariable("nickname") String nickname, @PathVariable("id_room") Long idRoom) {
-        StorageGame storageGamePlay = storageGames.stream().filter(storageGame -> storageGame.getIdRoom().equals(idRoom)).findFirst().orElseThrow();
+        StorageGame storageGamePlay = storageGames.stream()
+                .filter(storageGame -> storageGame.getIdRoom().equals(idRoom))
+                .reduce((first, second) -> second).orElseThrow();
         int count = 0;
         List<ResultDTO> resultDTOs = new ArrayList<>();
         List<String> nicks = new ArrayList<>(storageGamePlay.getResult().keySet());
@@ -164,7 +168,16 @@ public class UserController {
         }
         return ResponseEntity.ok(gson.toJson(gson.fromJson(resultDTOs.toString(), Object.class)));
     }
+    @PostMapping("/again/{id_room}")
+    public ResponseEntity<String> playAgain(@PathVariable("id_room") Long idRoom){
+        Room playRoom = roomService.getOneRoom(idRoom);
+        playRoom.setStatus("AGAIN");
+        simpMessagingTemplate.convertAndSend("/topic/" + idRoom, gson.toJson(gson.fromJson(playRoom.getUsers().toString(), Object.class)));
+        return ResponseEntity.ok("again");
+
+    }
 
 
 
 }
+
