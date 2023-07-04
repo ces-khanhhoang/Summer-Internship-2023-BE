@@ -147,6 +147,23 @@ public class UserController {
         }
         return ResponseEntity.ok(gson.toJson(gson.fromJson(playRoom.getUsers().toString(), Object.class)));
     }
+    @PostMapping("/result/{nickname}/{id_room}")
+    public ResponseEntity<String> result(@PathVariable("nickname") String nickname, @PathVariable("id_room") Long idRoom) {
+        StorageGame storageGamePlay = storageGames.stream().filter(storageGame -> storageGame.getIdRoom().equals(idRoom)).findFirst().orElseThrow();
+        int count = 0;
+        List<ResultDTO> resultDTOs = new ArrayList<>();
+        List<String> nicks = new ArrayList<>(storageGamePlay.getResult().keySet());
+        Collections.rotate(nicks, nicks.indexOf(nickname));
+        Map<Integer, String> data = storageGamePlay.getResult().get(nickname);
+        for (Map.Entry<Integer, String> entry : data.entrySet()) {
+            ResultDTO resultDTO = new ResultDTO(nicks.get(count++), entry.getValue());
+            resultDTOs.add(resultDTO);
+        }
+        for (String nick : nicks) {
+            simpMessagingTemplate.convertAndSend("/topic/" + nick, gson.toJson(gson.fromJson(resultDTOs.toString(), Object.class)));
+        }
+        return ResponseEntity.ok(gson.toJson(gson.fromJson(resultDTOs.toString(), Object.class)));
+    }
 
 
 
