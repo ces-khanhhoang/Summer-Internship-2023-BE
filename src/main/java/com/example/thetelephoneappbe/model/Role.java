@@ -3,6 +3,7 @@ package com.example.thetelephoneappbe.model;
 
 import com.example.thetelephoneappbe.enums.ERole;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import javax.persistence.*;
@@ -63,20 +64,14 @@ public class Role {
         return Objects.hash(id, name);
     }
 
-   /* @Override
+
+    @Override
     public String toString() {
         return "{" +
                 "id:" + id +
                 ", name:" + name +
                 '}';
-    }*/
-   @Override
-   public String toString() {
-       return "{" +
-               "id:" + id +
-               ", name:" + name +
-               '}';
-   }
+    }
 }
 
 

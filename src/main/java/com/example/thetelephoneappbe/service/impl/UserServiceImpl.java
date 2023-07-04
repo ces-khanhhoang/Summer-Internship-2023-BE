@@ -1,6 +1,7 @@
 package com.example.thetelephoneappbe.service.impl;
 
 import com.example.thetelephoneappbe.model.Role;
+
 import com.example.thetelephoneappbe.model.Room;
 import com.example.thetelephoneappbe.model.User;
 import com.example.thetelephoneappbe.repository.UserRepository;
@@ -37,16 +38,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User creatUser(User user) {
-        return null;
-    }
-
-    @Override
-    public User saveUser(User user){
-        return  userRepository.save(user);
-    }
-
-    @Override
     public void joinUser(Long idRoom, String userName, RoomService roomService, RoleService roleService) {
         User user = new User();
         user.setNickname(userName);
@@ -62,9 +53,13 @@ public class UserServiceImpl implements UserService {
     public List<User> getUserByIdRoom(Long idRoom) {
         System.out.println(userRepository.findAll());
         return userRepository.findAll()
-                             .stream()
-                             .filter(user -> user.getRoom().getId().equals(idRoom))
-                             .toList();
+                .stream()
+                .filter(user -> user.getRoom().getId().equals(idRoom))
+                .toList();
     }
 
+    @Override
+    public User saveUser(User user){
+        return  userRepository.save(user);
+    }
 }

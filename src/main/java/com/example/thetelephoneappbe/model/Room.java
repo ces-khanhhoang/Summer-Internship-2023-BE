@@ -1,13 +1,8 @@
 package com.example.thetelephoneappbe.model;
 
 import javax.persistence.*;
-
 import java.util.ArrayList;
-import java.util.HashSet;
-
 import java.util.List;
-import java.util.Set;
-import java.util.ArrayList;
 
 @Entity
 @Table(name = "room")
@@ -19,8 +14,6 @@ public class Room {
     private Long id;
     @Column(name = "status")
     private String status;
-    @OneToMany(mappedBy = "room")
-    Set<User> users = new HashSet<>();
 
     public Room(){
     }
@@ -30,7 +23,7 @@ public class Room {
     }
 
     @OneToMany(mappedBy = "room")
-    private List<User> users1 = new ArrayList<>();
+    private List<User> users = new ArrayList<>();
 
     @OneToMany(mappedBy = "room1")
     private List<Result> results = new ArrayList<>();
@@ -49,13 +42,6 @@ public class Room {
 
     public void setStatus(String status) {
         this.status = status;
-    }
-    public Set<User> getUsers() {
-        return users;
-    }
-
-    public void setUsers(Set<User> users) {
-        this.users = users;
     }
 
     public List<User> getUsers() {
