@@ -14,6 +14,16 @@ public class Room {
     private Long id;
     @Column(name = "status")
     private String status;
+    @Column(name ="maxPlayer")
+    private int maxPlayer = 4;
+
+    public int getMaxPlayer() {
+        return maxPlayer;
+    }
+
+    public void setMaxPlayer(int maxPlayer) {
+        this.maxPlayer = maxPlayer;
+    }
 
     public Room(){
     }
@@ -65,10 +75,12 @@ public class Room {
         return "{" +
                 "id = " + id +
                 ", status = " + status +
+                ", maxPlayer =" + maxPlayer +
                 ", users = " + users +
                 ", results = " + results +
                 '}';
     }
+    
 }
 
 

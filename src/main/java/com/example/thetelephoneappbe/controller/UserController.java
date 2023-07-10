@@ -1,6 +1,7 @@
 package com.example.thetelephoneappbe.controller;
 
 import com.example.thetelephoneappbe.DTO.ResultDTO;
+import com.example.thetelephoneappbe.model.Role;
 import com.example.thetelephoneappbe.model.Room;
 import com.example.thetelephoneappbe.model.User;
 import com.example.thetelephoneappbe.service.RoleService;
@@ -18,6 +19,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import java.util.*;
 
+import static com.example.thetelephoneappbe.enums.ERole.ROLE_USER;
+
 @Controller
 @RequestMapping("/user")
 @CrossOrigin("*")
@@ -25,11 +28,7 @@ public class UserController {
     private UserService userService;
     private RoomService roomService;
     private RoleService roleService;
-
-
     List<StorageGame> storageGames = new ArrayList<>();
-
-
     @Autowired
     private SimpMessagingTemplate simpMessagingTemplate;
     Gson gson = new Gson();
@@ -49,20 +48,32 @@ public class UserController {
         this.roleService = roleService;
     }
 
-
     @PostMapping("/create/{user_name}")
     public ResponseEntity<String> create(@PathVariable("user_name") String userName) {
         User user = userService.creatUser(userName, roomService, roleService);
         return ResponseEntity.ok(gson.toJson(gson.fromJson(user.toString(), Object.class)));
     }
 
-
     @PostMapping("/join/{id_room}/{user_name}")
     public ResponseEntity<String> join(@PathVariable("id_room") Long idRoom, @PathVariable("user_name") String userName) {
-        userService.joinUser(idRoom, userName, roomService, roleService);
-        List<User> users = roomService.getOneRoom(idRoom).getUsers();
-        simpMessagingTemplate.convertAndSend("/topic/" + idRoom, gson.toJson(gson.fromJson(users.toString(), Object.class)));
-        return ResponseEntity.ok(gson.toJson(gson.fromJson(users.toString(), Object.class)));
+        Room roomPlay = roomService.getOneRoom(idRoom);
+        if(roomPlay.getUsers().size() < roomPlay.getMaxPlayer()){
+            User userNew = new User();
+            userNew.setNickname(userName);
+            Room room = roomService.getAllRoom().stream().filter(room1 -> room1.getId().equals(idRoom)).findFirst().orElseThrow();
+            userNew.setRoom(room);
+            Role role = roleService.getAllRole().stream().filter(role1 -> role1.getName().equals(ROLE_USER)).findFirst().orElseThrow();
+            userNew.getRoles().add(role);
+            role.getUsers().add(userNew);
+            roomPlay.getUsers().add(userNew);
+            userService.saveUser(userNew);
+            simpMessagingTemplate.convertAndSend("/topic/" + idRoom, gson.toJson(gson.fromJson(roomPlay.getUsers().toString(), Object.class)));
+            return ResponseEntity.ok(gson.toJson(gson.fromJson(roomPlay.getUsers().toString(), Object.class)));
+
+        }
+        else{
+            return  ResponseEntity.ok("the room is full");
+        }
     }
 
     @PostMapping("/delete/{id_room}/{nickname}")
@@ -90,7 +101,6 @@ public class UserController {
 
     @PostMapping("/start/{id_room}")
     public ResponseEntity<String> start(@PathVariable("id_room") Long idRoom) {
-
         Room room = roomService.getOneRoom(idRoom);
         room.setStatus("IN_PROGRESS");
         List<User> users = room.getUsers();
@@ -104,10 +114,7 @@ public class UserController {
 
     @PostMapping("/done/{id_room}/{name}/{data}/{turn}")
     public ResponseEntity<String> Done(@PathVariable("id_room") Long idRoom, @PathVariable("name") String nickname, @PathVariable("data") String data, @PathVariable("turn") Integer turn) {
-
         Room playRoom = roomService.getOneRoom(idRoom);
-
-
         StorageGame storageGamePlay = storageGames.stream()
                 .filter(storageGame -> storageGame.getIdRoom().equals(idRoom))
                 .reduce((first, second) -> second).orElseThrow();
@@ -168,6 +175,7 @@ public class UserController {
         }
         return ResponseEntity.ok(gson.toJson(gson.fromJson(resultDTOs.toString(), Object.class)));
     }
+
     @PostMapping("/again/{id_room}")
     public ResponseEntity<String> playAgain(@PathVariable("id_room") Long idRoom){
         Room playRoom = roomService.getOneRoom(idRoom);
@@ -177,7 +185,15 @@ public class UserController {
 
     }
 
-
+    @PostMapping("/play/{number}/{id_room}")
+    public  ResponseEntity<String> numberPlay(@PathVariable("id_room") Long idRoom,@PathVariable("number") Integer number ){
+        Room playRoom =  roomService.getOneRoom(idRoom);
+        playRoom.setStatus("MAX");
+        playRoom.setMaxPlayer(number);
+        roomService.SaveRoom(playRoom);
+        simpMessagingTemplate.convertAndSend("/topic/" + idRoom, gson.toJson(gson.fromJson(playRoom.getUsers().toString(), Object.class)));
+        return ResponseEntity.ok("choose number of player");
+    }
 
 }
 

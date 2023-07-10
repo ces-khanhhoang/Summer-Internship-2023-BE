@@ -82,6 +82,7 @@ public class User {
                 ", nickname:" + nickname +
                 ", image:" + image +
                 ", role:" + roles +
+                ", maxPlayer:" + room.getMaxPlayer() +
                 ", id_room:" + room.getId() +
                 ", status:" + room.getStatus() +
                 "}";
