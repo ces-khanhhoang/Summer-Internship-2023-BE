@@ -50,14 +50,20 @@ public class UserController {
 
     @PostMapping("/create/{user_name}")
     public ResponseEntity<String> create(@PathVariable("user_name") String userName) {
+        try {
         User user = userService.creatUser(userName, roomService, roleService);
         return ResponseEntity.ok(gson.toJson(gson.fromJson(user.toString(), Object.class)));
+        }catch (Exception exception){
+            return  ResponseEntity.ok("nick name is duplicate");
+        }
+
     }
 
     @PostMapping("/join/{id_room}/{user_name}")
     public ResponseEntity<String> join(@PathVariable("id_room") Long idRoom, @PathVariable("user_name") String userName) {
         Room roomPlay = roomService.getOneRoom(idRoom);
         if(roomPlay.getUsers().size() < roomPlay.getMaxPlayer()){
+            try {
             User userNew = new User();
             userNew.setNickname(userName);
             Room room = roomService.getAllRoom().stream().filter(room1 -> room1.getId().equals(idRoom)).findFirst().orElseThrow();
@@ -69,6 +75,9 @@ public class UserController {
             userService.saveUser(userNew);
             simpMessagingTemplate.convertAndSend("/topic/" + idRoom, gson.toJson(gson.fromJson(roomPlay.getUsers().toString(), Object.class)));
             return ResponseEntity.ok(gson.toJson(gson.fromJson(roomPlay.getUsers().toString(), Object.class)));
+            }catch (Exception exception){
+                return  ResponseEntity.ok("nick name is duplicate");
+            }
 
         }
         else{

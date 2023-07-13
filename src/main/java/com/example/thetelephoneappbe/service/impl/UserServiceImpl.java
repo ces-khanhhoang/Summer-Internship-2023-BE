@@ -11,6 +11,7 @@ import com.example.thetelephoneappbe.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.sql.SQLException;
 import java.util.List;
 
 import static com.example.thetelephoneappbe.enums.ERole.ROLE_HOST;
@@ -27,7 +28,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User creatUser(String userName, RoomService roomService, RoleService roleService) {
+    public User creatUser(String userName, RoomService roomService, RoleService roleService)  throws SQLException {
         User user = new User();
         user.setNickname(userName);
         user.setRoom(roomService.SaveRoom(new Room("NEW")));
