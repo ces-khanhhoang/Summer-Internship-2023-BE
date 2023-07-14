@@ -18,7 +18,7 @@ public class User {
     @Column(name = "nickname")
     private String nickname;
     @Column(name = "image")
-    private String image;
+    private String id_image;
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "id_room", referencedColumnName = "id_room")
     Room room = new Room();
@@ -49,13 +49,7 @@ public class User {
         this.nickname = nickname;
     }
 
-    public String getImage() {
-        return image;
-    }
 
-    public void setImage(String image) {
-        this.image = image;
-    }
 
     public Set<Role> getRoles() {
         return roles;
@@ -73,14 +67,20 @@ public class User {
         this.room = room;
     }
 
+    public String getId_image() {
+        return id_image;
+    }
 
+    public void setId_image(String id_image) {
+        this.id_image = id_image;
+    }
 
     @Override
     public String toString() {
         return  "{" +
                 "  id:" + id +
                 ", nickname:" + nickname +
-                ", image:" + image +
+                ", id_image:" + id_image +
                 ", role:" + roles +
                 ", maxPlayer:" + room.getMaxPlayer() +
                 ", id_room:" + room.getId() +

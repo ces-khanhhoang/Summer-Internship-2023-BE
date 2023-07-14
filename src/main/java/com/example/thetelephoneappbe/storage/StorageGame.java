@@ -10,6 +10,17 @@ public class StorageGame {
     private List<String> values = new ArrayList<>();
     private List<String> receiver = new ArrayList<>();
 
+    public List<String> getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(List<String> avatar) {
+        this.avatar = avatar;
+    }
+
+    private List<String> avatar = new ArrayList<>();
+
+
     public StorageGame() {
     }
 

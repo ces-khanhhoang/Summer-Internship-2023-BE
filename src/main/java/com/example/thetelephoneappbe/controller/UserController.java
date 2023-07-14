@@ -48,10 +48,10 @@ public class UserController {
         this.roleService = roleService;
     }
 
-    @PostMapping("/create/{user_name}")
-    public ResponseEntity<String> create(@PathVariable("user_name") String userName) {
+    @PostMapping("/create/{user_name}/{id_avatar}")
+    public ResponseEntity<String> create(@PathVariable("user_name") String userName,@PathVariable("id_avatar") String id_avatar) {
         try {
-        User user = userService.creatUser(userName, roomService, roleService);
+        User user = userService.creatUser(userName, roomService, roleService,id_avatar);
         return ResponseEntity.ok(gson.toJson(gson.fromJson(user.toString(), Object.class)));
         }catch (Exception exception){
             return  ResponseEntity.ok("nick name is duplicate");
@@ -59,17 +59,19 @@ public class UserController {
 
     }
 
-    @PostMapping("/join/{id_room}/{user_name}")
-    public ResponseEntity<String> join(@PathVariable("id_room") Long idRoom, @PathVariable("user_name") String userName) {
+    @PostMapping("/join/{id_room}/{user_name}/{id_avatar}")
+    public ResponseEntity<String> join(@PathVariable("id_room") Long idRoom, @PathVariable("user_name") String userName,@PathVariable("id_avatar") String id_avatar) {
         Room roomPlay = roomService.getOneRoom(idRoom);
         if(roomPlay.getUsers().size() < roomPlay.getMaxPlayer()){
             try {
             User userNew = new User();
+            userNew.setId_image(id_avatar);
             userNew.setNickname(userName);
             Room room = roomService.getAllRoom().stream().filter(room1 -> room1.getId().equals(idRoom)).findFirst().orElseThrow();
             userNew.setRoom(room);
             Role role = roleService.getAllRole().stream().filter(role1 -> role1.getName().equals(ROLE_USER)).findFirst().orElseThrow();
             userNew.getRoles().add(role);
+
             role.getUsers().add(userNew);
             roomPlay.getUsers().add(userNew);
             userService.saveUser(userNew);
@@ -114,7 +116,8 @@ public class UserController {
         room.setStatus("IN_PROGRESS");
         List<User> users = room.getUsers();
         StorageGame storageGame = new StorageGame();
-        room.getUsers().stream().forEach(user -> storageGame.getResult().put(user.getNickname(), new LinkedHashMap<>()));
+        room.getUsers().stream().forEach(user -> {storageGame.getResult().put(user.getNickname(), new LinkedHashMap<>());
+        storageGame.getAvatar().add(user.getId_image());});
         storageGame.setIdRoom(idRoom);
         storageGames.add(storageGame);
         simpMessagingTemplate.convertAndSend("/topic/" + idRoom, gson.toJson(gson.fromJson(users.toString(), Object.class)));
@@ -173,11 +176,16 @@ public class UserController {
         int count = 0;
         List<ResultDTO> resultDTOs = new ArrayList<>();
         List<String> nicks = new ArrayList<>(storageGamePlay.getResult().keySet());
+        List<String> avatars = new ArrayList<>();
+        avatars.addAll(storageGamePlay.getAvatar());
+        Collections.rotate(avatars,nicks.indexOf(nickname));
         Collections.rotate(nicks, nicks.indexOf(nickname));
         Map<Integer, String> data = storageGamePlay.getResult().get(nickname);
+
         for (Map.Entry<Integer, String> entry : data.entrySet()) {
-            ResultDTO resultDTO = new ResultDTO(nicks.get(count++), entry.getValue());
+            ResultDTO resultDTO = new ResultDTO(nicks.get(count),entry.getValue(),avatars.get(count));
             resultDTOs.add(resultDTO);
+            count++;
         }
         for (String nick : nicks) {
             simpMessagingTemplate.convertAndSend("/topic/" + nick, gson.toJson(gson.fromJson(resultDTOs.toString(), Object.class)));

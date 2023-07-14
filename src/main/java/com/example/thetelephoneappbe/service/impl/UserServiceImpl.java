@@ -28,8 +28,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User creatUser(String userName, RoomService roomService, RoleService roleService)  throws SQLException {
+    public User creatUser(String userName, RoomService roomService, RoleService roleService,String id_image)  throws SQLException {
         User user = new User();
+        user.setId_image(id_image);
         user.setNickname(userName);
         user.setRoom(roomService.SaveRoom(new Room("NEW")));
         Role role = roleService.getAllRole().stream().filter(role1 -> role1.getName().equals(ROLE_HOST)).toList().get(0);
@@ -52,7 +53,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<User> getUserByIdRoom(Long idRoom) {
-        System.out.println(userRepository.findAll());
         return userRepository.findAll()
                 .stream()
                 .filter(user -> user.getRoom().getId().equals(idRoom))

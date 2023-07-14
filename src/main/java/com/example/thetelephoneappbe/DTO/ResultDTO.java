@@ -6,12 +6,23 @@ public class ResultDTO {
     private String namePlay;
     private String data;
 
+    private String id_image;
+
     public ResultDTO() {
     }
 
-    public ResultDTO(String namePlay, String data) {
+    public ResultDTO(String namePlay, String data, String id_image) {
         this.namePlay = namePlay;
         this.data = data;
+        this.id_image = id_image;
+    }
+
+    public String getId_image() {
+        return id_image;
+    }
+
+    public void setId_image(String id_image) {
+        this.id_image = id_image;
     }
 
     public String getNamePlay() {
@@ -35,6 +46,7 @@ public class ResultDTO {
         return "{" +
                 "namePlay:" + namePlay  +
                 ", data:" + data +
+                ", id_image:" + id_image +
                 '}';
     }
 }
