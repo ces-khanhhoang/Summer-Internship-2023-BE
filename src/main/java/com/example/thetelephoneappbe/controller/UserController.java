@@ -1,6 +1,8 @@
 package com.example.thetelephoneappbe.controller;
 
 import com.example.thetelephoneappbe.DTO.ResultDTO;
+import com.example.thetelephoneappbe.apiconstants.*;
+import com.example.thetelephoneappbe.enums.Status;
 import com.example.thetelephoneappbe.model.Role;
 import com.example.thetelephoneappbe.model.Room;
 import com.example.thetelephoneappbe.model.User;
@@ -13,10 +15,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static com.example.thetelephoneappbe.enums.ERole.ROLE_USER;
@@ -28,6 +33,12 @@ public class UserController {
     private UserService userService;
     private RoomService roomService;
     private RoleService roleService;
+    public static final String NAME_DUPLICATE = "nick name is duplicate";
+    public static final String FULL_ROOM = "the room is full";
+    public static final String NO_ROOM = "the room does not exist";
+    public static final String CHOOSE_NUMBER = "choose number of player";
+    public static final String PLAY_AGAIN = "play again new turn";
+    public static final String PREFIX = "/topic/";
     List<StorageGame> storageGames = new ArrayList<>();
     @Autowired
     private SimpMessagingTemplate simpMessagingTemplate;
@@ -48,83 +59,121 @@ public class UserController {
         this.roleService = roleService;
     }
 
-    @PostMapping("/create/{user_name}/{id_avatar}")
-    public ResponseEntity<String> create(@PathVariable("user_name") String userName,@PathVariable("id_avatar") String id_avatar) {
+    @PostMapping(ApiCreateRoom.API_CREATE_ROOM)
+    public ResponseEntity<String> createRoom(@PathVariable(ApiCreateRoom.PARAM_USER_NAME) String userName,
+                                             @PathVariable(ApiCreateRoom.PARAM_ID_AVATAR) String id_avatar) {
+
         try {
         User user = userService.creatUser(userName, roomService, roleService,id_avatar);
         return ResponseEntity.ok(gson.toJson(gson.fromJson(user.toString(), Object.class)));
         }catch (Exception exception){
-            return  ResponseEntity.ok("nick name is duplicate");
+            return  ResponseEntity.ok(NAME_DUPLICATE);
         }
 
     }
 
-    @PostMapping("/join/{id_room}/{user_name}/{id_avatar}")
-    public ResponseEntity<String> join(@PathVariable("id_room") Long idRoom, @PathVariable("user_name") String userName,@PathVariable("id_avatar") String id_avatar) {
-        Room roomPlay = roomService.getOneRoom(idRoom);
-        if(roomPlay.getUsers().size() < roomPlay.getMaxPlayer()){
-            try {
-            User userNew = new User();
-            userNew.setId_image(id_avatar);
-            userNew.setNickname(userName);
-            userNew.setRoom(roomPlay);
-            Role role = roleService.getAllRole().stream().filter(role1 -> role1.getName().equals(ROLE_USER)).findFirst().orElseThrow();
-            userNew.getRoles().add(role);
+    @PostMapping(ApiJoinRoom.API_JOIN_ROOM)
+    public ResponseEntity<String> joinRoom(@PathVariable(ApiJoinRoom.PARAM_ID_ROOM) Long idRoom,
+                                           @PathVariable(ApiJoinRoom.PARAM_USER_NAME) String userName,
+                                           @PathVariable(ApiJoinRoom.PARAM_ID_AVATAR) String id_avatar) {
 
-            role.getUsers().add(userNew);
-            roomPlay.getUsers().add(userNew);
-            userService.saveUser(userNew);
-            simpMessagingTemplate.convertAndSend("/topic/" + idRoom, gson.toJson(gson.fromJson(roomPlay.getUsers().toString(), Object.class)));
-            return ResponseEntity.ok(gson.toJson(gson.fromJson(roomPlay.getUsers().toString(), Object.class)));
-            }catch (Exception exception){
-                return  ResponseEntity.ok("nick name is duplicate");
+      try {
+          // choose room to check
+          Room roomPlay = roomService.getOneRoom(idRoom);
+          //check the number of people in the room against the maximum number of people in the room
+        if (roomPlay.getUsers().size() < roomPlay.getMaxPlayer()) {
+                try {
+                    User userNew = new User();
+                    userNew.setId_image(id_avatar);
+                    userNew.setNickname(userName);
+                    Room room = roomService.getAllRoom().stream()
+                                .filter(room1 -> room1.getId()
+                                .equals(idRoom))
+                                .findFirst()
+                                .orElseThrow();
+
+                    userNew.setRoom(room);
+                    Role role = roleService.getAllRole().stream().filter(role1 -> role1.getName()
+                            .equals(ROLE_USER)).findFirst().orElseThrow();
+
+                    userNew.getRoles().add(role);
+                    role.getUsers().add(userNew);
+                    roomPlay.getUsers().add(userNew);
+                    roomPlay.setStatus(Status.NEW.getValue());
+                    userService.saveUser(userNew);
+                    simpMessagingTemplate.convertAndSend(PREFIX + idRoom, gson.toJson(gson.fromJson(roomPlay.getUsers().toString(), Object.class)));
+
+                    return ResponseEntity.ok(gson.toJson(gson.fromJson(roomPlay.getUsers().toString(), Object.class)));
+                } catch (Exception exception) {
+                    return ResponseEntity.ok(NAME_DUPLICATE);
+                }
+
+            } else {
+                return ResponseEntity.ok(FULL_ROOM);
             }
+        }
+        catch (Exception exception) {
+             return  ResponseEntity.ok(NO_ROOM);
+      }
 
-        }
-        else{
-            return  ResponseEntity.ok("the room is full");
-        }
     }
 
-    @PostMapping("/delete/{id_room}/{nickname}")
-    public ResponseEntity<String> deleteUserFromRoom(@PathVariable("id_room") Long roomId, @PathVariable("nickname") String name) {
+    @PostMapping(ApiDeleteUserFromRoom.API_DELETE_USER_FROM_ROOM)
+    public ResponseEntity<String> deleteUserFromRoom(@PathVariable(ApiDeleteUserFromRoom.PARAM_ID_ROOM) Long roomId,
+                                                     @PathVariable(ApiDeleteUserFromRoom.PARAM_NICKNAME) String name) {
+
         Room playRoom = roomService.getOneRoom(roomId);
         User userToDelete = playRoom
                 .getUsers().stream()
                 .filter(user -> user.getNickname()
-                        .equals(name)).findFirst().orElseThrow();
+                .equals(name)).findFirst().orElseThrow();
 
         playRoom.getUsers().remove(userToDelete);
         roomService.SaveRoom(playRoom);
         userToDelete.setRoom(null);
         userService.saveUser(userToDelete);
-
+        playRoom.getUsers().stream().forEach(user -> System.out.println(user));
+        playRoom.setStatus(Status.NEW.getValue());
         simpMessagingTemplate.convertAndSend(
-                "/topic/" + roomId,
+                PREFIX + roomId,
                 gson.toJson(gson.fromJson(playRoom.getUsers().toString(), Object.class)));
         simpMessagingTemplate.convertAndSend(
-                "/topic/" + userToDelete.getNickname(),
+                PREFIX + userToDelete.getNickname(),
                 gson.toJson(gson.fromJson(userToDelete.getNickname(), Object.class)));
 
         return ResponseEntity.ok(gson.toJson(gson.fromJson(playRoom.getUsers().toString(), Object.class)));
     }
 
-    @PostMapping("/start/{id_room}")
-    public ResponseEntity<String> start(@PathVariable("id_room") Long idRoom) {
+    @PostMapping(ApiStartGame.API_START_GAME)
+    public ResponseEntity<String> start(@PathVariable(ApiStartGame.PARAM_ID_ROOM) Long idRoom
+                                        ,@PathVariable(ApiStartGame.PARAM_MODE) String mode) {
+
         Room room = roomService.getOneRoom(idRoom);
-        room.setStatus("IN_PROGRESS");
+        room.setLastPlay(LocalDateTime.now());
+        if(mode.equals(Status.IN_PROGRESS.getValue())) {
+            room.setStatus(Status.IN_PROGRESS.getValue());
+        }
+        if(mode.equals(Status.KNOCK_OFF.getValue())){
+            room.setStatus(Status.KNOCK_OFF.getValue());
+        }
+        roomService.SaveRoom(room);
         List<User> users = room.getUsers();
         StorageGame storageGame = new StorageGame();
         room.getUsers().stream().forEach(user -> {storageGame.getResult().put(user.getNickname(), new LinkedHashMap<>());
         storageGame.getAvatar().add(user.getId_image());});
         storageGame.setIdRoom(idRoom);
         storageGames.add(storageGame);
-        simpMessagingTemplate.convertAndSend("/topic/" + idRoom, gson.toJson(gson.fromJson(users.toString(), Object.class)));
+        simpMessagingTemplate.convertAndSend(PREFIX + idRoom, gson.toJson(gson.fromJson(users.toString(), Object.class)));
+
         return ResponseEntity.ok(gson.toJson(gson.fromJson(users.toString(), Object.class)));
     }
 
-    @PostMapping("/done/{id_room}/{name}/{data}/{turn}")
-    public ResponseEntity<String> Done(@PathVariable("id_room") Long idRoom, @PathVariable("name") String nickname, @PathVariable("data") String data, @PathVariable("turn") Integer turn) {
+    @PostMapping(ApiPlayGame.API_PLAY_GAME)
+    public ResponseEntity<String> playGame(@PathVariable(ApiPlayGame.PARAM_ID_ROOM) Long idRoom,
+                                           @PathVariable(ApiPlayGame.PARAM_NAME) String nickname,
+                                           @PathVariable(ApiPlayGame.PARAM_DATA) String data,
+                                           @PathVariable(ApiPlayGame.PARAM_TURN) Integer turn) {
+
         Room playRoom = roomService.getOneRoom(idRoom);
         StorageGame storageGamePlay = storageGames.stream()
                 .filter(storageGame -> storageGame.getIdRoom().equals(idRoom))
@@ -148,14 +197,18 @@ public class UserController {
             Collections.rotate(storageGamePlay.getValues(), turn);
             storageGamePlay.getReceiver().addAll(storageGamePlay.getKeyNickName());
             Collections.rotate(storageGamePlay.getReceiver(), turn);
-            if (turn % 2 == 0) {
-                playRoom.setStatus("DRAW");
-            } else {
-                playRoom.setStatus("WRITE");
+
+            if(!playRoom.getStatus().equals(Status.KNOCK_OFF.getValue())) {
+
+                if (turn % 2 == 0) {
+                    playRoom.setStatus(Status.DRAW.getValue());
+                } else {
+                    playRoom.setStatus(Status.WRITE.getValue());
+                }
             }
             for (int i = 0; i < playRoom.getUsers().size(); i++) {
                 String JSON = "{value:" + storageGamePlay.getValues().get(i) + ", receiver:" + storageGamePlay.getReceiver().get(i) + ", status:" + playRoom.getStatus() + ", number:" + playRoom.getUsers().size() + "}";
-                simpMessagingTemplate.convertAndSend("/topic/" + storageGamePlay.getKeyNickName().get(i), gson.toJson(gson.fromJson(JSON, Object.class)));
+                simpMessagingTemplate.convertAndSend(PREFIX + storageGamePlay.getKeyNickName().get(i), gson.toJson(gson.fromJson(JSON, Object.class)));
             }
 
             storageGamePlay.setNicknames(new HashSet<>());
@@ -167,12 +220,13 @@ public class UserController {
         return ResponseEntity.ok(gson.toJson(gson.fromJson(playRoom.getUsers().toString(), Object.class)));
     }
 
-    @PostMapping("/result/{nickname}/{id_room}")
-    public ResponseEntity<String> result(@PathVariable("nickname") String nickname, @PathVariable("id_room") Long idRoom) {
+    @PostMapping(ApiGetResult.API_GET_RESULT)
+    public ResponseEntity<String> getResult(@PathVariable(ApiGetResult.PARAM_NICKNAME) String nickname,
+                                            @PathVariable(ApiGetResult.PARAM_ID_ROOM) Long idRoom) {
         StorageGame storageGamePlay = storageGames.stream()
                 .filter(storageGame -> storageGame.getIdRoom().equals(idRoom))
                 .reduce((first, second) -> second).orElseThrow();
-        int count = 0;
+
         List<ResultDTO> resultDTOs = new ArrayList<>();
         List<String> nicks = new ArrayList<>(storageGamePlay.getResult().keySet());
         List<String> avatars = new ArrayList<>();
@@ -182,34 +236,37 @@ public class UserController {
         Map<Integer, String> data = storageGamePlay.getResult().get(nickname);
 
         for (Map.Entry<Integer, String> entry : data.entrySet()) {
-            ResultDTO resultDTO = new ResultDTO(nicks.get(count),entry.getValue(),avatars.get(count));
+            ResultDTO resultDTO = new ResultDTO(nicks.get(entry.getKey()-1),entry.getValue(),avatars.get(entry.getKey()-1));
             resultDTOs.add(resultDTO);
-            count++;
         }
         for (String nick : nicks) {
-            simpMessagingTemplate.convertAndSend("/topic/" + nick, gson.toJson(gson.fromJson(resultDTOs.toString(), Object.class)));
+            simpMessagingTemplate.convertAndSend(PREFIX + nick, gson.toJson(gson.fromJson(resultDTOs.toString(), Object.class)));
         }
+
         return ResponseEntity.ok(gson.toJson(gson.fromJson(resultDTOs.toString(), Object.class)));
     }
 
-    @PostMapping("/again/{id_room}")
-    public ResponseEntity<String> playAgain(@PathVariable("id_room") Long idRoom){
+    @PostMapping(ApiPlayAgain.API_PLAY_AGAIN)
+    public ResponseEntity<String> playAgain(@PathVariable(ApiPlayAgain.PARAM_ID_ROOM) Long idRoom){
         Room playRoom = roomService.getOneRoom(idRoom);
-        playRoom.setStatus("AGAIN");
-        simpMessagingTemplate.convertAndSend("/topic/" + idRoom, gson.toJson(gson.fromJson(playRoom.getUsers().toString(), Object.class)));
-        return ResponseEntity.ok("again");
+        playRoom.setStatus(Status.AGAIN.getValue());
+        simpMessagingTemplate.convertAndSend(PREFIX + idRoom, gson.toJson(gson.fromJson(playRoom.getUsers().toString(), Object.class)));
+        return ResponseEntity.ok(PLAY_AGAIN);
 
     }
 
-    @PostMapping("/play/{number}/{id_room}")
-    public  ResponseEntity<String> numberPlay(@PathVariable("id_room") Long idRoom,@PathVariable("number") Integer number ){
-        Room playRoom =  roomService.getOneRoom(idRoom);
-        playRoom.setStatus("MAX");
+    @PostMapping(ApiChooseMaxNumber.API_CHOOSE_MAX_NUMBER)
+    public  ResponseEntity<String> numberPlay(@PathVariable(ApiChooseMaxNumber.PARAM_ID_ROOM) Long idRoom,
+                                              @PathVariable(ApiChooseMaxNumber.PARAM_NUMBER) Integer number) {
+
+        Room playRoom = roomService.getOneRoom(idRoom);
+        playRoom.setStatus(Status.MAX.getValue());
         playRoom.setMaxPlayer(number);
         roomService.SaveRoom(playRoom);
-        simpMessagingTemplate.convertAndSend("/topic/" + idRoom, gson.toJson(gson.fromJson(playRoom.getUsers().toString(), Object.class)));
-        return ResponseEntity.ok("choose number of player");
+        simpMessagingTemplate.convertAndSend(PREFIX + idRoom, gson.toJson(gson.fromJson(playRoom.getUsers().toString(), Object.class)));
+        return ResponseEntity.ok(CHOOSE_NUMBER);
     }
+
 
 }
 

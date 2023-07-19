@@ -1,6 +1,7 @@
 package com.example.thetelephoneappbe.model;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,6 +17,8 @@ public class Room {
     private String status;
     @Column(name ="maxPlayer")
     private int maxPlayer = 4;
+    @Column(name = "last_time_play")
+    private LocalDateTime lastPlay;
 
     public int getMaxPlayer() {
         return maxPlayer;
@@ -23,6 +26,14 @@ public class Room {
 
     public void setMaxPlayer(int maxPlayer) {
         this.maxPlayer = maxPlayer;
+    }
+
+    public LocalDateTime getLastPlay() {
+        return lastPlay;
+    }
+
+    public void setLastPlay(LocalDateTime lastPlay) {
+        this.lastPlay = lastPlay;
     }
 
     public Room(){
