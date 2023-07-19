@@ -125,7 +125,6 @@ public class UserController {
                 .getUsers().stream()
                 .filter(user -> user.getNickname()
                 .equals(name)).findFirst().orElseThrow();
-
         playRoom.getUsers().remove(userToDelete);
         roomService.SaveRoom(playRoom);
         userToDelete.setRoom(null);
