@@ -7,7 +7,8 @@ public enum Status {
     WRITE("WRITE"),
     AGAIN("AGAIN"),
     MAX("MAX"),
-    NEW("NEW");
+    NEW("NEW"),
+    NORMAL("NORMAL");
 
 
     private final String value;

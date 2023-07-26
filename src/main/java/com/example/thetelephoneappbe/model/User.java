@@ -19,6 +19,8 @@ public class User {
     private String nickname;
     @Column(name = "image")
     private String id_image;
+
+    private String modeCurrent;
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "id_room", referencedColumnName = "id_room")
     Room room = new Room();
@@ -49,7 +51,13 @@ public class User {
         this.nickname = nickname;
     }
 
+    public String getModeCurrent() {
+        return modeCurrent;
+    }
 
+    public void setModeCurrent(String modeCurrent) {
+        this.modeCurrent = modeCurrent;
+    }
 
     public Set<Role> getRoles() {
         return roles;
@@ -83,6 +91,7 @@ public class User {
                 ", id_image:" + id_image +
                 ", role:" + roles +
                 ", maxPlayer:" + room.getMaxPlayer() +
+                ", modeCurrent:" + modeCurrent +
                 ", id_room:" + room.getId() +
                 ", status:" + room.getStatus() +
                 "}";

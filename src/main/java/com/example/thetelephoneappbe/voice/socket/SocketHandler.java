@@ -20,7 +20,8 @@ public class SocketHandler {
     private final SocketIOServer server;
     private static final Map<String, SocketIOClient> users = new HashMap<>();
     private static final Map<String, String> rooms = new HashMap<>();
-    private static final Map<String, List<String>> usersIdRooms = new HashMap<>(); 
+    private static final Map<String, List<String>> usersIdRooms = new HashMap<>();
+
 
     public SocketHandler(SocketIOServer server) {
         this.server = server;

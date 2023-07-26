@@ -15,15 +15,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
-
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-
 import java.time.LocalDateTime;
 import java.util.*;
-
+import static com.example.thetelephoneappbe.enums.ERole.ROLE_HOST;
 import static com.example.thetelephoneappbe.enums.ERole.ROLE_USER;
 
 @Controller
@@ -38,6 +36,8 @@ public class UserController {
     public static final String NO_ROOM = "the room does not exist";
     public static final String CHOOSE_NUMBER = "choose number of player";
     public static final String PLAY_AGAIN = "play again new turn";
+    public static final String GAME_HAS_ALREADY_BEGUN = "the game has already begun";
+
     public static final String PREFIX = "/topic/";
     List<StorageGame> storageGames = new ArrayList<>();
     @Autowired
@@ -80,12 +80,19 @@ public class UserController {
       try {
           // choose room to check
           Room roomPlay = roomService.getOneRoom(idRoom);
+
+          if(roomPlay.getStatus().equals(Status.IN_PROGRESS.getValue())){
+              return ResponseEntity.ok(GAME_HAS_ALREADY_BEGUN);
+          }
           //check the number of people in the room against the maximum number of people in the room
         if (roomPlay.getUsers().size() < roomPlay.getMaxPlayer()) {
                 try {
+                    Role roleHost = roleService.getAllRole().stream().filter(role1 -> role1.getName().equals(ROLE_HOST)).findFirst().orElseThrow();
+                    User host = roomPlay.getUsers().stream().filter(user -> user.getRoles().contains(roleHost)).findFirst().orElseThrow();
                     User userNew = new User();
                     userNew.setId_image(id_avatar);
                     userNew.setNickname(userName);
+                    userNew.setModeCurrent(host.getModeCurrent());
                     Room room = roomService.getAllRoom().stream()
                                 .filter(room1 -> room1.getId()
                                 .equals(idRoom))
@@ -118,6 +125,21 @@ public class UserController {
 
     }
 
+    @PostMapping(ApiChooseMode.API_CHOOSE_MODE)
+    public ResponseEntity<String> chooseMap(@PathVariable(ApiChooseMode.PARAM_ID_ROOM) Long roomId,
+                                            @PathVariable(ApiChooseMode.PARAM_NAME) String nameMode) {
+
+        Room playRoom = roomService.getOneRoom(roomId);
+        playRoom.getUsers().stream().forEach(user -> user.setModeCurrent(nameMode));
+        roomService.SaveRoom(playRoom);
+        simpMessagingTemplate.convertAndSend(
+                PREFIX + roomId,
+                gson.toJson(gson.fromJson(playRoom.getUsers().toString(), Object.class)));
+
+        return ResponseEntity.ok(gson.toJson(gson.fromJson(playRoom.getUsers().toString(), Object.class)));
+
+    }
+
     @PostMapping(ApiDeleteUserFromRoom.API_DELETE_USER_FROM_ROOM)
     public ResponseEntity<String> deleteUserFromRoom(@PathVariable(ApiDeleteUserFromRoom.PARAM_ID_ROOM) Long roomId,
                                                      @PathVariable(ApiDeleteUserFromRoom.PARAM_NICKNAME) String name) {
@@ -132,7 +154,6 @@ public class UserController {
         roomService.SaveRoom(playRoom);
         userToDelete.setRoom(null);
         userService.saveUser(userToDelete);
-        playRoom.getUsers().stream().forEach(user -> System.out.println(user));
         playRoom.setStatus(Status.NEW.getValue());
         simpMessagingTemplate.convertAndSend(
                 PREFIX + roomId,
@@ -183,7 +204,6 @@ public class UserController {
             Map<Integer, String> innerMap = storageGamePlay.getResult().get(nickname);
             innerMap.put(turn, data);
         }
-
         storageGamePlay.getNicknames().add(nickname);
         boolean areListsEqual = playRoom.getUsers().size() == storageGamePlay.getNicknames().size();
         if (areListsEqual) {
@@ -207,6 +227,7 @@ public class UserController {
                 }
             }
             for (int i = 0; i < playRoom.getUsers().size(); i++) {
+
                 String JSON = "{value:" + storageGamePlay.getValues().get(i) + ", receiver:" + storageGamePlay.getReceiver().get(i) + ", status:" + playRoom.getStatus() + ", number:" + playRoom.getUsers().size() + "}";
                 simpMessagingTemplate.convertAndSend(PREFIX + storageGamePlay.getKeyNickName().get(i), gson.toJson(gson.fromJson(JSON, Object.class)));
             }
@@ -223,6 +244,7 @@ public class UserController {
     @PostMapping(ApiGetResult.API_GET_RESULT)
     public ResponseEntity<String> getResult(@PathVariable(ApiGetResult.PARAM_NICKNAME) String nickname,
                                             @PathVariable(ApiGetResult.PARAM_ID_ROOM) Long idRoom) {
+
         StorageGame storageGamePlay = storageGames.stream()
                 .filter(storageGame -> storageGame.getIdRoom().equals(idRoom))
                 .reduce((first, second) -> second).orElseThrow();
@@ -242,14 +264,15 @@ public class UserController {
         for (String nick : nicks) {
             simpMessagingTemplate.convertAndSend(PREFIX + nick, gson.toJson(gson.fromJson(resultDTOs.toString(), Object.class)));
         }
-
         return ResponseEntity.ok(gson.toJson(gson.fromJson(resultDTOs.toString(), Object.class)));
     }
 
     @PostMapping(ApiPlayAgain.API_PLAY_AGAIN)
     public ResponseEntity<String> playAgain(@PathVariable(ApiPlayAgain.PARAM_ID_ROOM) Long idRoom){
+
         Room playRoom = roomService.getOneRoom(idRoom);
         playRoom.setStatus(Status.AGAIN.getValue());
+        roomService.SaveRoom(playRoom);
         simpMessagingTemplate.convertAndSend(PREFIX + idRoom, gson.toJson(gson.fromJson(playRoom.getUsers().toString(), Object.class)));
         return ResponseEntity.ok(PLAY_AGAIN);
 
@@ -266,7 +289,6 @@ public class UserController {
         simpMessagingTemplate.convertAndSend(PREFIX + idRoom, gson.toJson(gson.fromJson(playRoom.getUsers().toString(), Object.class)));
         return ResponseEntity.ok(CHOOSE_NUMBER);
     }
-
 
 }
 

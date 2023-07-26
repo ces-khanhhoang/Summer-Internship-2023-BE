@@ -1,5 +1,6 @@
 package com.example.thetelephoneappbe.service.impl;
 
+import com.example.thetelephoneappbe.enums.Status;
 import com.example.thetelephoneappbe.model.Role;
 
 import com.example.thetelephoneappbe.model.Room;
@@ -32,6 +33,7 @@ public class UserServiceImpl implements UserService {
         User user = new User();
         user.setId_image(id_image);
         user.setNickname(userName);
+        user.setModeCurrent(Status.IN_PROGRESS.getValue());
         user.setRoom(roomService.SaveRoom(new Room("NEW")));
         Role role = roleService.getAllRole().stream().filter(role1 -> role1.getName().equals(ROLE_HOST)).toList().get(0);
         user.getRoles().add(role);
